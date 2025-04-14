@@ -1,11 +1,16 @@
 package com.marqdown.api.service;
 
+import com.marqdown.api.dto.LoginRequest;
 import com.marqdown.api.dto.SignupRequest;
 import com.marqdown.api.exception.EmailAlreadyExistsException;
+import com.marqdown.api.model.AuthenticationPrincipal;
 import com.marqdown.api.model.User;
 import com.marqdown.api.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +21,14 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
     }
 
     public User register(SignupRequest signupRequest) {
@@ -37,5 +46,14 @@ public class AuthService {
 
         logger.info("New user registered with email: {}", signupRequest.getEmail());
         return savedUser;
+    }
+
+    public User verifyUser(LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+
+        AuthenticationPrincipal authPrincipal = (AuthenticationPrincipal) authentication.getPrincipal();
+        logger.info("User logged in with email: {}", loginRequest.getEmail());
+        return authPrincipal.getUser();
     }
 }

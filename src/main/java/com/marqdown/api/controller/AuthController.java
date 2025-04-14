@@ -1,7 +1,9 @@
 package com.marqdown.api.controller;
 
+import com.marqdown.api.dto.LoginRequest;
 import com.marqdown.api.dto.SignupRequest;
-import com.marqdown.api.dto.SignupResponse;
+import com.marqdown.api.dto.AuthResponse;
+import com.marqdown.api.model.AuthenticationPrincipal;
 import com.marqdown.api.model.User;
 import com.marqdown.api.service.AuthService;
 import com.marqdown.api.service.JwtService;
@@ -28,19 +30,40 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<SignupResponse> register(@Valid @RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody SignupRequest signupRequest) {
         User savedUser = authService.register(signupRequest);
 
-        SignupResponse.UserDto userDto = SignupResponse.UserDto.builder()
+        AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
                 .fullName(savedUser.getFullName())
                 .email(savedUser.getEmail())
                 .build();
 
-        SignupResponse response = SignupResponse.builder()
+        AuthResponse response = AuthResponse.builder()
                 .success(true)
                 .message("User registered successfully.")
                 .user(userDto)
                 .token(jwtService.generateToken(savedUser.getEmail()))
+                .requiresEmailVerification(false)
+                .redirectUrl("/")
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        User loggedInUser = authService.verifyUser(loginRequest);
+
+        AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
+                .fullName(loggedInUser.getFullName())
+                .email(loggedInUser.getEmail())
+                .build();
+
+        AuthResponse response = AuthResponse.builder()
+                .success(true)
+                .message("User logged in successfully.")
+                .user(userDto)
+                .token(jwtService.generateToken(loggedInUser.getEmail()))
                 .requiresEmailVerification(false)
                 .redirectUrl("/")
                 .build();

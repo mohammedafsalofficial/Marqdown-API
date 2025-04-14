@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Data
 @Builder
-public class SignupResponse {
+public class AuthResponse {
 
     private boolean success;
     private String message;
