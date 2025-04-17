@@ -20,7 +20,7 @@ public class AuthResponse {
     private Map<String, Object> metadata;
 
     @Data
-    @Builder
+    @Builder(toBuilder = true)
     public static class UserDto {
         private String fullName;
         private String email;

@@ -14,13 +14,17 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<AuthResponse> handleEmailAlreadyExists(EmailAlreadyExistsException e) {
+    private ResponseEntity<AuthResponse> buildErrorResponse(String message, HttpStatus status) {
         AuthResponse response = AuthResponse.builder()
                 .success(false)
-                .message(e.getMessage())
+                .message(message)
                 .build();
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+        return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<AuthResponse> handleEmailAlreadyExists(EmailAlreadyExistsException e) {
+        return buildErrorResponse(e.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -45,11 +49,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<AuthResponse> handleAuthenticationException(AuthenticationException e) {
-        AuthResponse response = AuthResponse.builder()
-                .success(false)
-                .message(e.getMessage())
-                .build();
+        return buildErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
 
-        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    @ExceptionHandler(JwtTokenExpiredException.class)
+    public ResponseEntity<AuthResponse> handleTokenExpiration(JwtTokenExpiredException e) {
+        return buildErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(JwtTokenException.class)
+    public ResponseEntity<AuthResponse> handleJwtTokenException(JwtTokenException e) {
+        return buildErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(MissingAuthorizationHeaderException.class)
+    public ResponseEntity<AuthResponse> handleMissingAuthorizationHeader(MissingAuthorizationHeaderException e) {
+        return buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }

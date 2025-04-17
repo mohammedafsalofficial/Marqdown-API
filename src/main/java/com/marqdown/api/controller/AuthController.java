@@ -3,22 +3,20 @@ package com.marqdown.api.controller;
 import com.marqdown.api.dto.LoginRequest;
 import com.marqdown.api.dto.SignupRequest;
 import com.marqdown.api.dto.AuthResponse;
-import com.marqdown.api.model.AuthenticationPrincipal;
+import com.marqdown.api.exception.MissingAuthorizationHeaderException;
 import com.marqdown.api.model.User;
 import com.marqdown.api.service.AuthService;
 import com.marqdown.api.service.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/auth")
-@Validated
 public class AuthController {
 
     private final AuthService authService;
@@ -64,6 +62,32 @@ public class AuthController {
                 .message("User logged in successfully.")
                 .user(userDto)
                 .token(jwtService.generateToken(loggedInUser.getEmail()))
+                .requiresEmailVerification(false)
+                .redirectUrl("/")
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<AuthResponse> validate(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new MissingAuthorizationHeaderException("Authorization header is missing or malformed");
+        }
+
+        String authToken = authHeader.substring(7);
+        String email = jwtService.extractUsername(authToken);
+
+        AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
+                .email(email)
+                .fullName("")
+                .build();
+
+        AuthResponse response = AuthResponse.builder()
+                .success(true)
+                .message("Token is valid.")
+                .user(userDto)
+                .token(authToken)
                 .requiresEmailVerification(false)
                 .redirectUrl("/")
                 .build();
