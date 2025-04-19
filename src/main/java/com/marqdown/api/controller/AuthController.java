@@ -7,13 +7,10 @@ import com.marqdown.api.exception.MissingAuthorizationHeaderException;
 import com.marqdown.api.model.User;
 import com.marqdown.api.service.AuthService;
 import com.marqdown.api.service.JwtService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -70,7 +67,7 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<AuthResponse> validate(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<AuthResponse> validateAuthToken(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new MissingAuthorizationHeaderException("Authorization header is missing or malformed");
         }
