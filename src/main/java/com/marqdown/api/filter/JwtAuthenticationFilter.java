@@ -51,20 +51,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         AuthenticationPrincipal authenticationPrincipal = (AuthenticationPrincipal) myUserDetailsService.loadUserByUsername(username);
                         UsernamePasswordAuthenticationToken authenticationToken =
                                 new UsernamePasswordAuthenticationToken(username, null, authenticationPrincipal.getAuthorities());
-                        authenticationToken.setDetails(
-                                new WebAuthenticationDetailsSource().buildDetails(request)
-                        );
+                        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     }
                 }
             } catch (JwtTokenExpiredException e) {
-                sendErrorResponse(response, request, HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+                sendErrorResponse(request, response, HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
                 return;
             } catch (JwtTokenException e) {
-                sendErrorResponse(response, request, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                sendErrorResponse(request, response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
                 return;
             } catch (Exception e) {
-                sendErrorResponse(response, request, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Authentication Failed.");
+                sendErrorResponse(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Authentication Failed.");
                 return;
             }
         }
@@ -72,7 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void sendErrorResponse(HttpServletResponse response, HttpServletRequest request, int status, String message) throws IOException {
+    private void sendErrorResponse(HttpServletRequest request, HttpServletResponse response, int status, String message) throws IOException {
         response.setStatus(status);
         response.setContentType("application/json");
 
